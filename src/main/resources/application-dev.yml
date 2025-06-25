@@ -1,18 +1,24 @@
 spring:
-    profiles:
-        active: dev
     application:
         name: greenhouse
     data:
         mongodb:
             uri: mongodb://root:example@localhost:27017/greenhouse-dev?authSource=admin
             database: greenhouse-dev
+    autoconfigure:
+        exclude: 
+            - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+
+management:
+    endpoints:
+        web: 
+            exposure:
+                include: '*'
 
 endpoints:
     esp-server:
         url: http://192.168.18.26:8080
         port: 8080
         endpoints:
-            dht: /api/dht
-            # TODO Finish this endpoint
-            gpio: /api/gpio/%s/%d/%d
+            dht: api/dht
+            gpio: api/gpio/%s/%d/%d

@@ -12,5 +12,4 @@ endpoints:
         port: 8080
         endpoints:
             dht: /api/dht
-            # TODO Finish this endpoint
             gpio: /api/gpio/%s/%d/%d

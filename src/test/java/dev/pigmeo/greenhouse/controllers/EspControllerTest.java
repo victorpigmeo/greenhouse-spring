@@ -20,72 +20,76 @@ import org.springframework.test.web.servlet.MvcResult;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import dev.pigmeo.greenhouse.BaseIntegrationTest;
-import dev.pigmeo.greenhouse.dto.DhtReadsByTimestampRequest;
 import dev.pigmeo.greenhouse.dto.DhtResponse;
 import dev.pigmeo.greenhouse.models.Dht;
 
-
 public class EspControllerTest extends BaseIntegrationTest {
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private MongoTemplate mongoTemplate;
-    @Autowired
-    ObjectMapper objectMapper;
+        private MockMvc mockMvc;
+        private MongoTemplate mongoTemplate;
+        private ObjectMapper objectMapper;
 
-    private Dht dhtRead1 = new Dht("1", 25.0, 60.0, 21.0,
-            LocalDateTime.now().minusMinutes(4).toInstant(ZoneOffset.UTC));
-    private Dht dhtRead2 = new Dht("2", 24.0, 55.0, 20.0,
-            LocalDateTime.now().minusMinutes(3).toInstant(ZoneOffset.UTC));
-    private Dht dhtRead3 = new Dht("3", 24.0, 55.0, 20.0,
-            LocalDateTime.now().minusMinutes(1).toInstant(ZoneOffset.UTC));
+        @Autowired
+        public EspControllerTest(MockMvc mockMvc, MongoTemplate mongoTemplate, ObjectMapper objectMapper) {
+                this.mockMvc = mockMvc;
+                this.mongoTemplate = mongoTemplate;
+                this.objectMapper = objectMapper;
+        }
 
-    @BeforeEach
-    public void setUp() {
-        mongoTemplate.dropCollection(Dht.class);
-        mongoTemplate.save(dhtRead1);
-        mongoTemplate.save(dhtRead2);
-        mongoTemplate.save(dhtRead3);
-    }
+        private Dht dhtRead1 = new Dht("1", 25.0, 60.0, 21.0,
+                        LocalDateTime.now().minusMinutes(4).toInstant(ZoneOffset.UTC));
+        private Dht dhtRead2 = new Dht("2", 24.0, 55.0, 20.0,
+                        LocalDateTime.now().minusMinutes(3).toInstant(ZoneOffset.UTC));
+        private Dht dhtRead3 = new Dht("3", 24.0, 55.0, 20.0,
+                        LocalDateTime.now().minusMinutes(1).toInstant(ZoneOffset.UTC));
 
-    @Test
-    public void testGetDhtReadsByTimestamp() throws Exception {
-        DhtReadsByTimestampRequest request = new DhtReadsByTimestampRequest(
-                LocalDateTime.now().minusMinutes(4).withSecond(0),
-                LocalDateTime.now().minusMinutes(2).withSecond(0));
+        @BeforeEach
+        public void setUp() {
+                mongoTemplate.dropCollection(Dht.class);
+                mongoTemplate.save(dhtRead1);
+                mongoTemplate.save(dhtRead2);
+                mongoTemplate.save(dhtRead3);
+        }
 
-        System.out.println("Request: " + request);
-        MvcResult result = mockMvc.perform(get("/api/dht")
-                .content(objectMapper.writeValueAsString(request))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
+        @Test
+        public void testGetDhtReadsByTimestamp() throws Exception {
+                String uri = String.format("/api/dht?from=%d&to=%d",
+                                LocalDateTime.now().minusMinutes(4).withSecond(0).toInstant(ZoneOffset.UTC)
+                                                .toEpochMilli(),
+                                LocalDateTime.now().minusMinutes(2).withSecond(0).toInstant(ZoneOffset.UTC)
+                                                .toEpochMilli());
 
-        List<DhtResponse> dhtResponseList = List
-                .of(objectMapper.readValue(result.getResponse().getContentAsString(), DhtResponse[].class));
+                MvcResult result = mockMvc.perform(get(uri)
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andReturn();
 
-        assertNotNull(dhtResponseList);
-        assertThat(dhtResponseList).isNotEmpty();
-        assertThat(dhtResponseList).hasSize(2);
-    }
+                List<DhtResponse> dhtResponseList = List
+                                .of(objectMapper.readValue(result.getResponse().getContentAsString(),
+                                                DhtResponse[].class));
 
-    @Test
-    public void testGetDhtReadsByTimestamp_shouldReturnZeroReads() throws Exception {
-        DhtReadsByTimestampRequest request = new DhtReadsByTimestampRequest(
-                LocalDateTime.now().minusMinutes(1),
-                LocalDateTime.now());
+                assertNotNull(dhtResponseList);
+                assertThat(dhtResponseList).isNotEmpty();
+                assertThat(dhtResponseList).hasSize(2);
+        }
 
-        System.out.println("Request: " + request);
-        MvcResult result = mockMvc.perform(get("/api/dht")
-                .content(objectMapper.writeValueAsString(request))
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andReturn();
+        @Test
+        public void testGetDhtReadsByTimestamp_shouldReturnZeroReads() throws Exception {
+                String uri = String.format("/api/dht?from=%d&to=%d",
+                                LocalDateTime.now().minusMinutes(1).toInstant(ZoneOffset.UTC)
+                                                .toEpochMilli(),
+                                LocalDateTime.now().toInstant(ZoneOffset.UTC)
+                                                .toEpochMilli());
 
-        List<DhtResponse> dhtResponseList = List
-                .of(objectMapper.readValue(result.getResponse().getContentAsString(), DhtResponse[].class));
+                MvcResult result = mockMvc
+                                .perform(get(uri).contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andReturn();
 
-        assertNotNull(dhtResponseList);
-        assertThat(dhtResponseList).isEmpty();
-    }
+                List<DhtResponse> dhtResponseList = List
+                                .of(objectMapper.readValue(result.getResponse().getContentAsString(),
+                                                DhtResponse[].class));
+
+                assertNotNull(dhtResponseList);
+                assertThat(dhtResponseList).isEmpty();
+        }
 }
