@@ -9,7 +9,9 @@ import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -57,6 +59,16 @@ public class EspController {
                     dhtRead.getHumidity(),
                     dhtRead.getHeatIndex(),
                     LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+    }
+
+    @GetMapping("/gpio")
+    public List<Gpio> getAllGpio(){
+        return this.espService.getAllGpio();
+    }
+
+    @PostMapping("/gpio")
+    public Gpio newGpio(@RequestBody Gpio gpio){
+        return this.espService.newGpio(gpio);
     }
 
     @PutMapping("/gpio/{pin}")

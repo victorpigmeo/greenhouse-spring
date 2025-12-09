@@ -1,6 +1,7 @@
 package dev.pigmeo.greenhouse.services.impl;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,14 @@ public class EspServiceImpl implements EspService {
     @Override
     public Dht getDht() {
         return this.espHttpClient.getDht();
+    }
+
+    public List<Gpio> getAllGpio(){
+        return this.gpioRepository.findAll();
+    }
+
+    public Gpio newGpio(Gpio newGpio){
+        return this.gpioRepository.save(newGpio);
     }
 
     public Gpio setGpio(Long pin){
